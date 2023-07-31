@@ -1,10 +1,10 @@
 import sys
-
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
 import getopt
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+
 
 def convert_DMS_to_decimal(value):
     idx_degree = value.find("°")
@@ -21,8 +21,8 @@ def convert_DMS_to_decimal(value):
 def scrap_gps_pos(argv):
 
     url = ''
-    useFirefox = False
-    useHeadless = True
+    use_firefox = False
+    use_headless = True
 
     options, argv = getopt.getopt(argv, "u:v", ["url=", "use-firefox", "headed"])
     for opt, arg in options:
@@ -31,19 +31,19 @@ def scrap_gps_pos(argv):
         if opt in ('-v', '--verbose'):
             verbose = True
         if opt == '--use-firefox':
-            useFirefox = True
+            use_firefox = True
         if opt == '--headed':
-            useHeadless = False
+            use_headless = False
 
-    if useFirefox:
-        options = Options()
-        if useHeadless:
+    if use_firefox:
+        options = webdriver.FirefoxOptions()
+        if use_headless:
             options.add_argument("--headless")
         driver = webdriver.Firefox(options=options)
 
     else:
         chrome_options = webdriver.ChromeOptions()
-        if useHeadless:
+        if use_headless:
             chrome_options.add_argument("--headless=new")
         driver = webdriver.Chrome(options=chrome_options)
 
