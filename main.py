@@ -1,12 +1,23 @@
 import sys
 import getopt
 import time
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from pyzabbix import ZabbixMetric, ZabbixSender
 
 
+def send_to_zabbix(alt, lat, long):
+    metrics = [
+        ZabbixMetric('Septentrio', 'septentrio.alt', alt),
+        ZabbixMetric('Septentrio', 'septentrio.lat', lat),
+        ZabbixMetric('Septentrio', 'septentrio.long', long)]
 
-def convert_DMS_to_decimal(value):
+    zbx = ZabbixSender('127.0.0.1', 10051)
+    zbx.send(metrics)
+
+
+def convert_dms_to_decimal(value):
     idx_degree = value.find("°")
     idx_minute = value.find("'")
     idx_second = value.find("\"")
@@ -18,8 +29,8 @@ def convert_DMS_to_decimal(value):
     if value[0] in ('S', 'W'):
         return converted_value * (-1)
 
-def scrap_gps_pos(argv):
 
+def scrap_gps_pos(argv):
     url = ''
     use_firefox = False
     use_headless = True
@@ -50,11 +61,18 @@ def scrap_gps_pos(argv):
     driver.get(url)
     time.sleep(1)
 
-    lat = driver.find_element(By.CLASS_NAME, 'position_x')
-    long = driver.find_element(By.CLASS_NAME, 'position_y')
-    height = driver.find_element(By.CLASS_NAME, 'position_h')
+    lat_element = driver.find_element(By.CLASS_NAME, 'position_x')
+    long_element = driver.find_element(By.CLASS_NAME, 'position_y')
+    height_element = driver.find_element(By.CLASS_NAME, 'position_h')
 
-    print(f'LAT: {convert_DMS_to_decimal(lat.text)} | LONG: {convert_DMS_to_decimal(long.text)} | HGT: {height.text}')
+    count = 0
+    while count < 3:
+        send_to_zabbix(
+            convert_dms_to_decimal(lat_element.text),
+            convert_dms_to_decimal(long_element.text),
+            float(height_element.text[:len(height_element.text)-1]))
+        count += 1
+
     driver.quit()
 
 
